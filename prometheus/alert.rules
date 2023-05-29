@@ -1,6 +1,11 @@
-groups: 
+groups:
 - name: example
   rules:
+  - alert: ServerReboot
+    expr: changes(uptime_seconds[5m]) > 0
+    labels:
+      severity: critical
+
   - alert: PrometheusTargetMissing
     expr: up == 0
     for: 0m
@@ -9,3 +14,30 @@ groups:
     annotations:
       summary: "Prometheus target missing (instance {{ $labels.instance }})"
       description: "A Prometheus target has disappeared. An exporter might be crashed. VALUE = {{ $value }}  LABELS: {{ $labels }}"
+
+  - alert: StatusCode
+    expr: probe_http_status_code > 0.8
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "Instance {{ $labels.instance }} under high load"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is under high load."
+
+  - alert: HighRequestLatency
+    expr: http_request_duration_seconds > 5
+    labels:
+      severity: warning
+    annotations:
+      summary: "Instance {{ $labels.instance }} has high request latency"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} has high request latency."
+
+  - alert: HTTPStatusCodeChange400
+    expr: changes(http_request_duration_seconds_count{status_code=~"4.."}[5m]) > 0
+    labels:
+      severity: warning
+
+  - alert: HTTPStatusCodeChange500
+    expr: changes(http_request_duration_seconds_count{status_code=~"5.."}[5m]) > 0
+    labels:
+      severity: warning
